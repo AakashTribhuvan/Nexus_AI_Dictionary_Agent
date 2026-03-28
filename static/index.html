@@ -1,0 +1,1173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nexus</title>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/sql.min.js"></script>
+<style>
+/* ── Reset & Variables ───────────────────────────────────────── */
+:root {
+  --bg0: #0b0b13;
+  --bg1: #0f0f1a;
+  --bg2: #141421;
+  --bg3: #1a1a2a;
+  --bg4: #212133;
+  --bg5: #282840;
+  --border: rgba(255,255,255,0.06);
+  --border-hi: rgba(255,255,255,0.13);
+  --t1: #e2e8f8;
+  --t2: #8892aa;
+  --t3: #44465a;
+  --green:  #22d484;
+  --blue:   #60a5fa;
+  --purple: #a78bfa;
+  --orange: #fb923c;
+  --cyan:   #22d3ee;
+  --red:    #f87171;
+  --yellow: #fbbf24;
+  --sidebar: 262px;
+  --radius: 10px;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; overflow: hidden; }
+body {
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  background: var(--bg0);
+  color: var(--t1);
+  display: flex;
+}
+a { color: inherit; text-decoration: none; }
+button { font-family: inherit; cursor: pointer; }
+
+/* ── Scrollbar ───────────────────────────────────────────────── */
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--bg5); border-radius: 2px; }
+
+/* ── Sidebar ─────────────────────────────────────────────────── */
+.sidebar {
+  width: var(--sidebar);
+  flex-shrink: 0;
+  background: var(--bg1);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.sb-header {
+  padding: 18px 16px 14px;
+  border-bottom: 1px solid var(--border);
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.logo-icon {
+  width: 36px;
+  height: 36px;
+  background: linear-gradient(135deg, #1e40af, #7c3aed);
+  border-radius: 9px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 19px;
+  flex-shrink: 0;
+  box-shadow: 0 0 18px rgba(124,58,237,0.35);
+}
+
+.logo-name { font-size: 13.5px; font-weight: 700; letter-spacing: 0.2px; line-height: 1.2; }
+.logo-sub  { font-size: 10.5px; color: var(--t3); margin-top: 2px; }
+
+.model-pills { display: flex; flex-direction: column; gap: 5px; }
+.model-pill {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 10.5px;
+  color: var(--t2);
+  padding: 4px 8px;
+  background: var(--bg3);
+  border-radius: 6px;
+  border: 1px solid var(--border);
+}
+.m-dot {
+  width: 5px; height: 5px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  animation: blink 2.5s ease-in-out infinite;
+}
+.m-dot.sql    { background: var(--blue);   box-shadow: 0 0 6px var(--blue); }
+.m-dot.reason { background: var(--purple); box-shadow: 0 0 6px var(--purple); }
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:.35} }
+
+.sb-label {
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.9px;
+  text-transform: uppercase;
+  color: var(--t3);
+  padding: 12px 16px 6px;
+}
+
+.table-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0 8px 8px;
+}
+
+.tbl-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 8px;
+  border-radius: 7px;
+  cursor: pointer;
+  transition: background .14s;
+  margin-bottom: 1px;
+  border: 1px solid transparent;
+}
+.tbl-item:hover {
+  background: var(--bg3);
+  border-color: var(--border);
+}
+.tbl-icon { font-size: 12px; opacity: .5; flex-shrink: 0; }
+.tbl-name {
+  font-size: 12px;
+  color: var(--t2);
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  transition: color .14s;
+}
+.tbl-item:hover .tbl-name { color: var(--t1); }
+.tbl-meta { font-size: 9.5px; color: var(--t3); flex-shrink: 0; }
+
+.tbl-loading { font-size: 12px; color: var(--t3); padding: 12px 10px; }
+
+.sb-footer {
+  padding: 10px 12px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+.sb-btn {
+  width: 100%;
+  padding: 8px 12px;
+  border-radius: 7px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--t2);
+  font-size: 11.5px;
+  text-align: left;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: all .14s;
+}
+.sb-btn:hover {
+  background: var(--bg3);
+  border-color: var(--border-hi);
+  color: var(--t1);
+}
+
+/* ── Main ────────────────────────────────────────────────────── */
+.main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  min-width: 0;
+}
+
+/* ── Header ──────────────────────────────────────────────────── */
+.header {
+  padding: 13px 24px;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg1);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-shrink: 0;
+}
+.hdr-title { font-size: 14.5px; font-weight: 700; }
+.hdr-sub   { font-size: 11px; color: var(--t3); margin-top: 2px; }
+.status-pill {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  color: var(--t2);
+  padding: 5px 12px;
+  background: var(--bg3);
+  border-radius: 20px;
+  border: 1px solid var(--border);
+}
+.s-dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--green);
+  box-shadow: 0 0 8px var(--green);
+  animation: blink 2.5s ease-in-out infinite;
+}
+
+/* ── Chat area ───────────────────────────────────────────────── */
+.chat-area {
+  flex: 1;
+  overflow-y: auto;
+  padding: 28px 28px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  scroll-behavior: smooth;
+}
+
+/* ── Welcome ─────────────────────────────────────────────────── */
+.welcome {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: 14px;
+  flex: 1;
+  padding: 40px;
+}
+.welcome-glyph {
+  font-size: 52px;
+  filter: drop-shadow(0 0 20px rgba(100,120,255,0.4));
+}
+.welcome-title {
+  font-size: 24px;
+  font-weight: 800;
+  background: linear-gradient(135deg, var(--blue), var(--purple));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.welcome-body {
+  font-size: 13.5px;
+  color: var(--t2);
+  max-width: 440px;
+  line-height: 1.75;
+}
+
+/* ── Messages ────────────────────────────────────────────────── */
+.msg {
+  display: flex;
+  gap: 12px;
+  animation: pop .28s cubic-bezier(.22,1,.36,1);
+}
+@keyframes pop {
+  from { opacity:0; transform:translateY(10px); }
+  to   { opacity:1; transform:translateY(0);    }
+}
+
+.msg.user { flex-direction: row-reverse; }
+
+.avatar {
+  width: 34px; height: 34px;
+  border-radius: 9px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 17px;
+  background: var(--bg3);
+}
+.msg.user  .avatar { background: linear-gradient(135deg, #1e3a8a, #2563eb); }
+.msg.bot   .avatar { background: linear-gradient(135deg, #1e1b4b, #4c1d95); }
+
+.msg-body {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-width: 80%;
+}
+.msg.user .msg-body { align-items: flex-end; }
+
+.bubble {
+  padding: 11px 16px;
+  border-radius: 12px;
+  font-size: 13.5px;
+  line-height: 1.65;
+}
+.msg.user .bubble {
+  background: linear-gradient(135deg, #1e3a8a, #1d4ed8);
+  color: #dbeafe;
+  border-bottom-right-radius: 3px;
+}
+.msg.bot .bubble {
+  background: var(--bg3);
+  color: var(--t1);
+  border: 1px solid var(--border);
+  border-bottom-left-radius: 3px;
+}
+
+/* ── Intent badge ────────────────────────────────────────────── */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+}
+.badge.data      { background: rgba(34,212,132,.1);  color: var(--green);  border: 1px solid rgba(34,212,132,.22); }
+.badge.schema    { background: rgba(96,165,250,.1);  color: var(--blue);   border: 1px solid rgba(96,165,250,.22); }
+.badge.visualize { background: rgba(251,146,60,.1);  color: var(--orange); border: 1px solid rgba(251,146,60,.22); }
+.badge.semantic  { background: rgba(34,211,238,.1);  color: var(--cyan);   border: 1px solid rgba(34,211,238,.22); }
+.badge.invalid   { background: rgba(248,113,113,.1); color: var(--red);    border: 1px solid rgba(248,113,113,.22); }
+.badge.error     { background: rgba(248,113,113,.1); color: var(--red);    border: 1px solid rgba(248,113,113,.22); }
+
+/* ── Relevant tables row ─────────────────────────────────────── */
+.rel-tables {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+.rel-tag {
+  font-size: 10px;
+  padding: 2px 8px;
+  background: var(--bg4);
+  border: 1px solid var(--border-hi);
+  border-radius: 4px;
+  color: var(--t2);
+}
+
+/* ── Cards ───────────────────────────────────────────────────── */
+.card {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  width: 100%;
+}
+.card-head {
+  padding: 9px 14px;
+  border-bottom: 1px solid var(--border);
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: var(--t3);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.card-head-left { display: flex; align-items: center; gap: 7px; }
+
+/* ── SQL block ───────────────────────────────────────────────── */
+.sql-card .card-head { color: var(--green); }
+.sql-card pre { margin:0; }
+.sql-card pre code {
+  padding: 14px 16px !important;
+  font-size: 12px !important;
+  line-height: 1.55 !important;
+  background: transparent !important;
+  border-radius: 0 !important;
+  display: block;
+  overflow-x: auto;
+}
+
+.copy-btn {
+  padding: 3px 9px;
+  border-radius: 5px;
+  border: 1px solid var(--border-hi);
+  background: var(--bg4);
+  color: var(--t2);
+  font-size: 10px;
+  transition: all .14s;
+  cursor: pointer;
+}
+.copy-btn:hover { background: var(--bg5); color: var(--t1); }
+.copy-btn.copied { color: var(--green); border-color: rgba(34,212,132,.4); }
+
+/* ── Data table ──────────────────────────────────────────────── */
+.tbl-card .card-head { color: var(--green); }
+.tbl-scroll {
+  overflow: auto;
+  max-height: 340px;
+}
+.data-tbl {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+.data-tbl th {
+  padding: 9px 13px;
+  background: var(--bg3);
+  color: var(--t2);
+  font-weight: 700;
+  font-size: 10.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  white-space: nowrap;
+}
+.data-tbl td {
+  padding: 7px 13px;
+  border-bottom: 1px solid var(--border);
+  color: var(--t1);
+  max-width: 220px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.data-tbl tr:last-child td { border-bottom: none; }
+.data-tbl tr:hover td { background: var(--bg3); }
+.data-tbl td.null-val { color: var(--t3); font-style: italic; }
+
+.row-foot {
+  padding: 7px 14px;
+  font-size: 10.5px;
+  color: var(--t3);
+  border-top: 1px solid var(--border);
+}
+
+/* ── Insight card ────────────────────────────────────────────── */
+.insight-card .card-head { color: var(--purple); }
+.insight-body {
+  padding: 14px 16px;
+  font-size: 13px;
+  line-height: 1.75;
+  color: var(--t1);
+}
+.insight-body strong { color: var(--t1); }
+.insight-body code {
+  background: var(--bg4);
+  padding: 1px 5px;
+  border-radius: 4px;
+  font-size: 11.5px;
+}
+
+/* ── Schema cards ────────────────────────────────────────────── */
+.schema-body {
+  padding: 14px 16px;
+  font-size: 13px;
+  color: var(--t1);
+}
+.col-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 5px 0;
+  border-bottom: 1px solid var(--border);
+}
+.col-row:last-child { border-bottom: none; }
+.col-name { color: var(--t1); font-size: 12.5px; flex: 1; }
+.col-type-badge {
+  font-size: 10px;
+  padding: 2px 7px;
+  border-radius: 4px;
+  background: var(--bg4);
+  color: var(--t2);
+  font-family: monospace;
+}
+.pk-badge {
+  font-size: 9px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: rgba(251,146,60,.12);
+  color: var(--orange);
+  border: 1px solid rgba(251,146,60,.25);
+  font-weight: 700;
+  letter-spacing: 0.3px;
+}
+
+.tbl-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  padding: 14px 16px;
+}
+.tbl-chip {
+  padding: 6px 13px;
+  background: var(--bg3);
+  border: 1px solid var(--border-hi);
+  border-radius: 7px;
+  font-size: 12px;
+  color: var(--blue);
+  cursor: pointer;
+  transition: all .14s;
+}
+.tbl-chip:hover {
+  background: rgba(96,165,250,.1);
+  border-color: rgba(96,165,250,.35);
+}
+
+/* ── Mermaid ─────────────────────────────────────────────────── */
+.mermaid-card .card-head { color: var(--orange); }
+.mermaid-wrap {
+  padding: 20px;
+  display: flex;
+  justify-content: center;
+  overflow-x: auto;
+  background: var(--bg2);
+}
+.mermaid-wrap svg { max-width: 100%; }
+.mermaid-spinner {
+  color: var(--t3);
+  font-size: 12px;
+  padding: 30px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* ── Error ───────────────────────────────────────────────────── */
+.err-card {
+  padding: 13px 16px;
+  background: rgba(248,113,113,.07);
+  border: 1px solid rgba(248,113,113,.2);
+  border-radius: var(--radius);
+  color: var(--red);
+  font-size: 12.5px;
+  line-height: 1.55;
+}
+
+/* ── Typing indicator ────────────────────────────────────────── */
+.typing-wrap { display: flex; gap: 12px; align-items: flex-start; }
+.dots {
+  display: flex;
+  gap: 4px;
+  padding: 13px 17px;
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  border-bottom-left-radius: 3px;
+  align-items: center;
+}
+.dots span {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--t2);
+  animation: bounce 1.3s infinite ease-in-out;
+}
+.dots span:nth-child(2) { animation-delay:.18s; }
+.dots span:nth-child(3) { animation-delay:.36s; }
+@keyframes bounce {
+  0%,60%,100% { transform:translateY(0);  opacity:.4; }
+  30%          { transform:translateY(-6px); opacity:1; }
+}
+
+/* ── Input area ──────────────────────────────────────────────── */
+.input-area {
+  padding: 14px 24px 18px;
+  border-top: 1px solid var(--border);
+  background: var(--bg1);
+  flex-shrink: 0;
+}
+.chips {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 10px;
+  flex-wrap: wrap;
+}
+.chip {
+  padding: 5px 13px;
+  border-radius: 20px;
+  border: 1px solid var(--border);
+  background: var(--bg3);
+  color: var(--t2);
+  font-size: 11.5px;
+  cursor: pointer;
+  transition: all .14s;
+  white-space: nowrap;
+}
+.chip:hover {
+  border-color: rgba(96,165,250,.4);
+  color: var(--blue);
+  background: rgba(96,165,250,.07);
+}
+.input-row {
+  display: flex;
+  gap: 10px;
+  align-items: flex-end;
+}
+textarea#inp {
+  flex: 1;
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 12px 16px;
+  color: var(--t1);
+  font-size: 13.5px;
+  font-family: inherit;
+  resize: none;
+  outline: none;
+  min-height: 48px;
+  max-height: 130px;
+  line-height: 1.55;
+  transition: border-color .15s;
+}
+textarea#inp:focus { border-color: rgba(96,165,250,.5); }
+textarea#inp::placeholder { color: var(--t3); }
+
+#send {
+  width: 48px; height: 48px;
+  border-radius: 10px;
+  border: none;
+  background: linear-gradient(135deg, #2563eb, #7c3aed);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: opacity .14s, transform .1s;
+  box-shadow: 0 0 18px rgba(124,58,237,.35);
+}
+#send:hover:not(:disabled)  { opacity: .88; }
+#send:active:not(:disabled) { transform: scale(.95); }
+#send:disabled { opacity: .35; cursor: not-allowed; box-shadow: none; }
+</style>
+</head>
+<body>
+
+<!-- ══ SIDEBAR ═══════════════════════════════════════════════════ -->
+<aside class="sidebar">
+  <div class="sb-header">
+    <div class="logo">
+      <div class="logo-icon">🧠</div>
+      <div>
+        <div class="logo-name">Nexus</div>
+        <div class="logo-sub">AI Dictionary Agent</div>
+      </div>
+    </div>
+    <div class="model-pills">
+      <div class="model-pill"><div class="m-dot sql"></div>SQL Brain · SQLCoder-7B</div>
+      <div class="model-pill"><div class="m-dot reason"></div>Reasoning · Qwen2.5-7B</div>
+    </div>
+  </div>
+
+  <div class="sb-label">Tables</div>
+  <div class="table-list" id="tbl-list">
+    <div class="tbl-loading">Loading tables…</div>
+  </div>
+
+  <div class="sb-footer">
+    <button class="sb-btn" onclick="quickAsk('Show me the full ER diagram of all tables')">🗺️&nbsp; Full ER Diagram</button>
+    <button class="sb-btn" onclick="quickAsk('List all tables in the database')">📋&nbsp; List All Tables</button>
+  </div>
+</aside>
+
+<!-- ══ MAIN ══════════════════════════════════════════════════════ -->
+<main class="main">
+
+  <!-- Header -->
+  <header class="header">
+    <div>
+      <div class="hdr-title">Multi-LLM Analytical Platform</div>
+      <div class="hdr-sub">Ask questions in plain English — SQL, schemas, relationships &amp; more</div>
+    </div>
+    <div class="status-pill"><div class="s-dot"></div><span id="status-txt">Ready</span></div>
+  </header>
+
+  <!-- Chat -->
+  <div class="chat-area" id="chat"></div>
+
+  <!-- Input -->
+  <div class="input-area">
+    <div class="chips">
+      <div class="chip" onclick="quickAsk('How many tables are in the database?')">How many tables?</div>
+      <div class="chip" onclick="quickAsk('Show me the full ER diagram')">ER Diagram</div>
+      <div class="chip" onclick="quickAsk('What are the top 10 customers by order count?')">Top customers</div>
+      <div class="chip" onclick="quickAsk('What is the average order value?')">Avg order value</div>
+      <div class="chip" onclick="quickAsk('What does the review_score column represent?')">Column meaning</div>
+    </div>
+    <div class="input-row">
+      <textarea id="inp" rows="1" placeholder="Ask a question about your data…"></textarea>
+      <button id="send" onclick="sendMsg()">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+             stroke-linecap="round" stroke-linejoin="round">
+          <line x1="22" y1="2" x2="11" y2="13"/>
+          <polygon points="22 2 15 22 11 13 2 9 22 2"/>
+        </svg>
+      </button>
+    </div>
+  </div>
+
+</main>
+
+<script>
+/* ── Init ─────────────────────────────────────────────────────── */
+mermaid.initialize({ startOnLoad: false, theme: 'dark', securityLevel: 'loose' });
+
+let busy = false;
+
+window.addEventListener('load', () => {
+  loadTables();
+  showWelcome();
+});
+
+/* ── Sidebar ──────────────────────────────────────────────────── */
+async function loadTables() {
+  try {
+    const res  = await fetch('/api/tables');
+    const data = await res.json();
+    const list = document.getElementById('tbl-list');
+    list.innerHTML = '';
+    data.tables.forEach(t => {
+      const d = document.createElement('div');
+      d.className = 'tbl-item';
+      d.innerHTML = `
+        <span class="tbl-icon">⊞</span>
+        <span class="tbl-name">${esc(t.name)}</span>
+        <span class="tbl-meta">${fmtNum(t.rows)}r</span>`;
+      d.onclick = () => quickAsk(`Show schema for table: ${t.name}`);
+      list.appendChild(d);
+    });
+  } catch {
+    document.getElementById('tbl-list').innerHTML =
+      '<div class="tbl-loading">Failed to load tables.</div>';
+  }
+}
+
+/* ── Welcome ──────────────────────────────────────────────────── */
+function showWelcome() {
+  const chat = document.getElementById('chat');
+  chat.innerHTML = `
+    <div class="welcome" id="welcome">
+      <div class="welcome-glyph">🤖</div>
+      <div class="welcome-title">Welcome To Nexus!</div>
+      <div class="welcome-body">
+        Ask questions in plain English. I'll generate SQL, visualize table
+        relationships, explain results, and answer schema questions.
+      </div>
+    </div>`;
+}
+
+function clearWelcome() {
+  const w = document.getElementById('welcome');
+  if (w) w.remove();
+}
+
+/* ── Send ─────────────────────────────────────────────────────── */
+function quickAsk(q) {
+  document.getElementById('inp').value = q;
+  sendMsg();
+}
+
+async function sendMsg() {
+  const inp  = document.getElementById('inp');
+  const q    = inp.value.trim();
+  if (!q || busy) return;
+
+  busy = true;
+  inp.value = '';
+  inp.style.height = 'auto';
+  document.getElementById('send').disabled = true;
+  clearWelcome();
+
+  appendUser(q);
+  const loadId = appendLoading();
+
+  try {
+    const res  = await fetch('/api/ask', {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify({ question: q }),
+    });
+    const data = await res.json();
+    removeEl(loadId);
+    appendBot(data);
+  } catch (err) {
+    removeEl(loadId);
+    appendBot({ intent: 'error', error: 'Could not reach the server. Is app.py running?' });
+  }
+
+  busy = false;
+  document.getElementById('send').disabled = false;
+  inp.focus();
+  scrollBottom();
+}
+
+/* ── Message builders ─────────────────────────────────────────── */
+function appendUser(text) {
+  const chat = document.getElementById('chat');
+  const d = document.createElement('div');
+  d.className = 'msg user';
+  d.innerHTML = `
+    <div class="avatar">👤</div>
+    <div class="msg-body">
+      <div class="bubble">${esc(text)}</div>
+    </div>`;
+  chat.appendChild(d);
+  scrollBottom();
+}
+
+function appendLoading() {
+  const chat = document.getElementById('chat');
+  const id   = 'ld-' + Date.now();
+  const d    = document.createElement('div');
+  d.id        = id;
+  d.className = 'typing-wrap';
+  d.innerHTML = `
+    <div class="avatar">🧠</div>
+    <div class="dots"><span></span><span></span><span></span></div>`;
+  chat.appendChild(d);
+  scrollBottom();
+  return id;
+}
+
+function appendBot(data) {
+  const chat = document.getElementById('chat');
+  const d    = document.createElement('div');
+  d.className = 'msg bot';
+
+  const body = document.createElement('div');
+  body.className = 'msg-body';
+  body.style.maxWidth = '88%';
+
+  body.appendChild(makeBadge(data.intent));
+
+  if (data.refined) {
+    // subtle refined text only if meaningfully different
+  }
+
+  // Relevant tables
+  if (data.relevant_tables && data.relevant_tables.length) {
+    const rt = document.createElement('div');
+    rt.className = 'rel-tables';
+    data.relevant_tables.forEach(t => {
+      const span = document.createElement('span');
+      span.className = 'rel-tag';
+      span.textContent = t;
+      rt.appendChild(span);
+    });
+    body.appendChild(rt);
+  }
+
+  buildResponse(body, data);
+
+  d.appendChild(document.createElement('div')).className = 'avatar';
+  d.children[0].textContent = '🧠';
+  d.children[0].style.cssText = 'width:34px;height:34px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:17px;background:linear-gradient(135deg,#1e1b4b,#4c1d95);flex-shrink:0;';
+  d.appendChild(body);
+  chat.appendChild(d);
+
+  // Highlight SQL
+  d.querySelectorAll('code.language-sql').forEach(el => hljs.highlightElement(el));
+
+  scrollBottom();
+}
+
+/* ── Response renderer ────────────────────────────────────────── */
+function buildResponse(body, data) {
+  const intent = data.intent;
+
+  if (intent === 'error' || (intent !== 'invalid' && data.error && !data.sql)) {
+    body.appendChild(errCard(data.error || 'Unknown error.'));
+    return;
+  }
+
+  if (intent === 'invalid') {
+    const b = document.createElement('div');
+    b.className = 'bubble';
+    b.style.cssText = 'background:var(--bg3);border:1px solid var(--border);border-bottom-left-radius:3px;';
+    b.textContent = data.message || "This question doesn't relate to the database.";
+    body.appendChild(b);
+    return;
+  }
+
+  if (intent === 'visualize') {
+    renderMermaid(body, data);
+    return;
+  }
+
+  if (intent === 'schema') {
+    renderSchema(body, data);
+    return;
+  }
+
+  if (intent === 'semantic') {
+    const card = makeCard('💬 Semantic Explanation', 'insight-card');
+    const bd   = document.createElement('div');
+    bd.className = 'insight-body';
+    bd.innerHTML = mdToHtml(data.answer || '');
+    card.appendChild(bd);
+    body.appendChild(card);
+    return;
+  }
+
+  // ── data intent ──
+  if (data.sql) {
+    body.appendChild(sqlCard(data.sql));
+  }
+  if (data.error) {
+    body.appendChild(errCard('SQL Error: ' + data.error));
+    return;
+  }
+  if (data.columns && data.rows !== undefined) {
+    body.appendChild(tableCard(data));
+  }
+  if (data.explanation) {
+    const card = makeCard('💡 Insight', 'insight-card');
+    const bd   = document.createElement('div');
+    bd.className = 'insight-body';
+    bd.innerHTML = mdToHtml(data.explanation);
+    card.appendChild(bd);
+    body.appendChild(card);
+  }
+}
+
+/* ── Schema renderer ──────────────────────────────────────────── */
+function renderSchema(body, data) {
+  if (data.subtype === 'count') {
+    const b = document.createElement('div');
+    b.className = 'bubble';
+    b.style.cssText = 'background:var(--bg3);border:1px solid var(--border);border-bottom-left-radius:3px;';
+    b.innerHTML = `The database contains <strong style="color:var(--blue)">${data.table_count}</strong> tables.`;
+    body.appendChild(b);
+    return;
+  }
+
+  if (data.subtype === 'list') {
+    const card = makeCard(`📋 All Tables (${data.tables.length})`, 'card');
+    const grid = document.createElement('div');
+    grid.className = 'tbl-grid';
+    data.tables.forEach(t => {
+      const chip = document.createElement('div');
+      chip.className = 'tbl-chip';
+      chip.textContent = t;
+      chip.onclick = () => quickAsk(`Show schema for table: ${t}`);
+      grid.appendChild(chip);
+    });
+    card.appendChild(grid);
+    body.appendChild(card);
+    return;
+  }
+
+  if (data.subtype === 'table_detail') {
+    const card = makeCard(
+      `📐 ${esc(data.detail_table)} &nbsp;<span style="color:var(--t3);font-weight:400">${data.row_count?.toLocaleString()} rows</span>`,
+      'card'
+    );
+    const sb = document.createElement('div');
+    sb.className = 'schema-body';
+    (data.columns || []).forEach(col => {
+      const row = document.createElement('div');
+      row.className = 'col-row';
+      row.innerHTML = `
+        <span class="col-name">${esc(col.name)}</span>
+        <span class="col-type-badge">${esc(col.type || 'TEXT')}</span>
+        ${col.pk ? '<span class="pk-badge">PK</span>' : ''}`;
+      sb.appendChild(row);
+    });
+    card.appendChild(sb);
+    body.appendChild(card);
+    return;
+  }
+
+  // full schema fallback
+  const card = makeCard(`📐 Full Schema (${data.table_count} tables)`, 'card');
+  const sb   = document.createElement('div');
+  sb.className = 'schema-body';
+  const pre  = document.createElement('pre');
+  pre.style.cssText = 'font-size:11.5px;color:var(--t2);white-space:pre-wrap;max-height:320px;overflow-y:auto;';
+  pre.textContent = data.schema_text || '';
+  sb.appendChild(pre);
+  card.appendChild(sb);
+  body.appendChild(card);
+}
+
+/* ── Mermaid ──────────────────────────────────────────────────── */
+function renderMermaid(body, data) {
+  const label = data.filter_tables && data.filter_tables.length < 9
+    ? data.filter_tables.join(', ')
+    : 'All Tables';
+  const card  = makeCard(`🗺️ ER Diagram — ${esc(label)}`, 'mermaid-card');
+  const wrap  = document.createElement('div');
+  wrap.className = 'mermaid-wrap';
+  wrap.innerHTML = '<div class="mermaid-spinner">⏳ Rendering diagram…</div>';
+  card.appendChild(wrap);
+  body.appendChild(card);
+
+  const uid = 'mer-' + Date.now();
+  mermaid.render(uid, data.mermaid_code)
+    .then(({ svg }) => { wrap.innerHTML = svg; })
+    .catch(e => {
+      wrap.innerHTML = `<div class="err-card" style="margin:0">Diagram error: ${esc(e.message)}</div>`;
+    });
+}
+
+/* ── SQL card ─────────────────────────────────────────────────── */
+function sqlCard(sql) {
+  const card = makeCard('⚡ Generated SQL', 'sql-card');
+
+  const btn  = document.createElement('button');
+  btn.className = 'copy-btn';
+  btn.textContent = 'Copy';
+  btn.onclick = () => {
+    navigator.clipboard.writeText(sql).then(() => {
+      btn.textContent = 'Copied!';
+      btn.classList.add('copied');
+      setTimeout(() => { btn.textContent = 'Copy'; btn.classList.remove('copied'); }, 1800);
+    });
+  };
+  card.querySelector('.card-head').appendChild(btn);
+
+  const pre  = document.createElement('pre');
+  const code = document.createElement('code');
+  code.className = 'language-sql';
+  code.textContent = sql;
+  pre.appendChild(code);
+  card.appendChild(pre);
+  return card;
+}
+
+/* ── Data table card ──────────────────────────────────────────── */
+function tableCard(data) {
+  const { columns, rows, total_rows } = data;
+  const card = makeCard(`📊 Results`, 'tbl-card');
+
+  if (!rows || rows.length === 0) {
+    const nb = document.createElement('div');
+    nb.style.cssText = 'padding:14px 16px;font-size:13px;color:var(--t2);';
+    nb.textContent = 'No rows returned.';
+    card.appendChild(nb);
+    return card;
+  }
+
+  const scroll = document.createElement('div');
+  scroll.className = 'tbl-scroll';
+  const table  = document.createElement('table');
+  table.className = 'data-tbl';
+
+  // Header
+  const thead = document.createElement('thead');
+  const hr    = document.createElement('tr');
+  columns.forEach(c => {
+    const th = document.createElement('th');
+    th.textContent = c;
+    hr.appendChild(th);
+  });
+  thead.appendChild(hr);
+  table.appendChild(thead);
+
+  // Body
+  const tbody = document.createElement('tbody');
+  rows.forEach(row => {
+    const tr = document.createElement('tr');
+    row.forEach(v => {
+      const td = document.createElement('td');
+      if (v === null || v === undefined) {
+        td.textContent = 'NULL';
+        td.className   = 'null-val';
+      } else {
+        td.textContent = String(v);
+        td.title       = String(v);
+      }
+      tr.appendChild(td);
+    });
+    tbody.appendChild(tr);
+  });
+  table.appendChild(tbody);
+
+  scroll.appendChild(table);
+  card.appendChild(scroll);
+
+  const foot = document.createElement('div');
+  foot.className = 'row-foot';
+  foot.textContent = rows.length === total_rows
+    ? `${total_rows.toLocaleString()} row${total_rows !== 1 ? 's' : ''}`
+    : `Showing ${rows.length.toLocaleString()} of ${total_rows.toLocaleString()} rows`;
+  card.appendChild(foot);
+
+  return card;
+}
+
+/* ── Helpers ──────────────────────────────────────────────────── */
+function makeCard(headHTML, cls) {
+  const card = document.createElement('div');
+  card.className = `card ${cls}`;
+  const head = document.createElement('div');
+  head.className = 'card-head';
+  const left = document.createElement('div');
+  left.className = 'card-head-left';
+  left.innerHTML = headHTML;
+  head.appendChild(left);
+  card.appendChild(head);
+  return card;
+}
+
+function makeBadge(intent) {
+  const map = {
+    data:      { icon: '⚡', label: 'Data Query' },
+    schema:    { icon: '📐', label: 'Schema'     },
+    visualize: { icon: '🗺️', label: 'Visualize'  },
+    semantic:  { icon: '💬', label: 'Semantic'   },
+    invalid:   { icon: '🚫', label: 'Invalid'    },
+    error:     { icon: '⚠️', label: 'Error'      },
+  };
+  const m  = map[intent] || map.data;
+  const el = document.createElement('span');
+  el.className = `badge ${intent}`;
+  el.textContent = `${m.icon} ${m.label}`;
+  return el;
+}
+
+function errCard(msg) {
+  const d = document.createElement('div');
+  d.className = 'err-card';
+  d.textContent = msg;
+  return d;
+}
+
+function esc(str) {
+  return String(str ?? '')
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function mdToHtml(text) {
+  return esc(text)
+    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+    .replace(/`(.*?)`/g, '<code>$1</code>')
+    .replace(/\n/g, '<br>');
+}
+
+function fmtNum(n) {
+  if (n >= 1e6) return (n/1e6).toFixed(1)+'M';
+  if (n >= 1e3) return (n/1e3).toFixed(1)+'k';
+  return n;
+}
+
+function removeEl(id) {
+  const el = document.getElementById(id);
+  if (el) el.remove();
+}
+
+function scrollBottom() {
+  const c = document.getElementById('chat');
+  requestAnimationFrame(() => { c.scrollTop = c.scrollHeight; });
+}
+
+/* ── Input auto-resize + keyboard ────────────────────────────── */
+const inp = document.getElementById('inp');
+inp.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMsg(); }
+});
+inp.addEventListener('input', () => {
+  inp.style.height = 'auto';
+  inp.style.height = Math.min(inp.scrollHeight, 130) + 'px';
+});
+</script>
+</body>
+</html>
