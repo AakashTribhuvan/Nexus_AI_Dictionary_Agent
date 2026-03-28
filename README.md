@@ -82,7 +82,7 @@ You need to download the dataset before running the project.
 ### Steps:
 
 1. Download dataset from Kaggle:
-   👉 [<link>](https://www.kaggle.com/datasets/dillonmyrick/bike-store-sample-database)
+   👉 https://www.kaggle.com/datasets/olistbr/brazilian-ecommerce?resource=download
 
 2. Extract the files
 
