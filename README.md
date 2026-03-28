@@ -3,6 +3,8 @@
 THIS IS A MULTI AI MODEL BASED PLATFORM NEEDS TO BE RUN ON MULTIPLE PC's IF A SINGLE PC CANNOT HANDLE THE FILES.
 A DEMO VIDEO HAS BEEN ATTACHED FOR THOSE WHO CANNOT RUN IT.
 
+Link To Older Versions ==> https://github.com/AakashTribhuvan/Nexus
+
 A multi-agent AI system that converts natural language into database insights using distributed models.
 
 ---
